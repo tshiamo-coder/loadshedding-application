@@ -4,6 +4,8 @@ import pandas as pd
 from openpyxl import Workbook
 import openpyxl
 import json
+import os
+
 #instatntiate workbook object
 #testing opnpyxl
 # wb = openpyxl.load_workbook("data/WesternCape_LS.xlsx")
@@ -65,13 +67,49 @@ def get_loadshedding_data(ws):
         # print(ws.cell(111,3).value)
     return list_of_schemas
 
+def get_all_suburbs(provinces):
+    all_suburbs = []
+    concat_str = "_LS.xlsx"
+    #loop through every province
+    for p in provinces:
+        filename = "dataExtraction/data/"+p+concat_str
+        sheet = get_Sheet_From_File(filename,sheetname="SP_List")
+        max_row = sheet.max_row
+        province_surburbs = []
+        for row in range (1,max_row+1):
+            suburb_schema = {
+                "SName": sheet.cell(row,4).value, #4
+                "MpName": sheet.cell(row,2).value, #2
+                "Block": sheet.cell(row,7).value, #7
+                "Type": sheet.cell(row,8).value, #8
+                "Province": p
+            }
+            print(suburb_schema)
+            province_surburbs.append(suburb_schema)
+        all_suburbs.extend(province_surburbs)
+
+    return all_suburbs
+
 if __name__ == "__main__":
-    filename ="data/WesternCape_LS.xlsx"
-    sheet = get_Sheet_From_File(filename,sheetname="Schedule")
-    get_Sheet_Data(sheet)
-    dict_table = get_loadshedding_data(sheet)
-    tuple_obj = (*dict_table,)
-    # dict_data = json.loads(str(dict_table))
-    jsonObj = json.dumps(dict_table)
-    with open("ls_data.json", "w") as outfile:
+    provinces = ["WesternCape","EasternCape","NorthernCape",
+                 "NorthWest", "FreeState","Gauteng","Mpumalanga",
+                 "Limpopo","KwaZulu-Natal"]
+    #file to extract loadshedding tables
+    # filename ="dataExtraction/data/WesternCape_LS.xlsx"
+    # sheet = get_Sheet_From_File(filename,sheetname="Schedule")
+    # get_Sheet_Data(sheet)
+    # dict_table = get_loadshedding_data(sheet)
+    # tuple_obj = (*dict_table,)
+    # # dict_data = json.loads(str(dict_table))
+    # jsonObj = json.dumps(dict_table)
+    # with open("ls_data.json", "w") as outfile:
+    #     outfile.write(jsonObj)
+
+    #THe below functions is for extracting all the suburbs
+    all_suburbs = get_all_suburbs(provinces)
+    # cwd = os.getcwd()
+    # print(cwd)
+    # ws = get_Sheet_From_File(filename,"SP_List")
+    jsonObj = json.dumps(all_suburbs)
+    with open("subrub_data.json", "w") as outfile:
         outfile.write(jsonObj)
